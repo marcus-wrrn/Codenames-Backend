@@ -1,18 +1,20 @@
 import torch
 from src.model import MORSpyFull
 from src.dataset import CodeNamesDataset
-from src.vector_search import VectorSearch                                                                                                                                                                                                                                                                                                                                                                                                     
+from database.vector_search import VectorSearch                                                                                                                                                                                                                                                                                                                                                                                                     
 
-def init_model_and_vocab(model_path: str, vocab_dir: str, board_dir: str, device='cpu') -> tuple[MORSpyFull, VectorSearch]:
-    dataset = CodeNamesDataset(vocab_dir, board_dir)
+def init_model_and_vocab(model_path: str, dataset: CodeNamesDataset, device='cpu') -> tuple[MORSpyFull, VectorSearch]:
+    # Initialize data
     vocab = VectorSearch(dataset)
+
+    # Initialize model
     model = MORSpyFull(
         vocab=vocab, 
         device=device, 
         freeze_encoder=True
     )
+    # Load model
     model.to(device)
-
     model.load_state_dict(torch.load(model_path))
 
     return model, vocab

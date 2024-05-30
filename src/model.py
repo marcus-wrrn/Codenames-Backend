@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
 import src.utils.utilities as utils
-from src.vector_search import VectorSearch
+from database.vector_search import VectorSearch
 from src.reranker import Reranker
 
 class MORSpyManyPooled(nn.Module):
@@ -126,6 +126,5 @@ class MORSpyFull(nn.Module):
         sim_scores = sim_scores.view(sim_scores.shape[0], -1)
         out = self.fc(sim_scores)
 
-        out = torch.sigmoid(out)
         logits.reranker_out = out
         return logits

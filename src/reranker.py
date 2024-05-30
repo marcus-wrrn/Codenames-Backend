@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 from torch import Tensor
-from src.vector_search import VectorSearch
+from database.vector_search import VectorSearch
 import src.utils.utilities as utils
 
 class ManyOutObj:
