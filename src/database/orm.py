@@ -10,25 +10,36 @@ class Database:
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS vocab (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                word_id INTEGER,
-                word TEXT
-            )
+                word TEXT,
+                word_id INTEGER UNIQUE,
+                is_board_word BOOLEAN DEFAULT 0
+            );
         ''')
 
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS board (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                word_id INTEGER,
-                word TEXT
-            )
+                word TEXT,
+                word_id INTEGER UNIQUE
+            );
         ''')
         self.conn.commit()
     
     def insert_vocab(self, word_id: int, word: str, commit=True) -> None:
+        # Check if word exists in board
         self.cursor.execute('''
-            INSERT INTO vocab (word_id, word)
-            VALUES (?, ?)
-        ''', (word_id, word))
+            SELECT word_id FROM board
+            WHERE word = ?
+        ''', (word,))
+
+        is_board_word = False
+        if self.cursor.fetchone():
+            is_board_word = True
+        
+        self.cursor.execute('''
+            INSERT INTO vocab (word_id, word, is_board_word)
+            VALUES (?, ?, ?)
+        ''', (word_id, word, is_board_word))
 
         if commit: self.conn.commit()
     
@@ -47,6 +58,14 @@ class Database:
         ''')
         return self.cursor.fetchall()
     
+    def get_pruned_vocab(self):
+        self.cursor.execute('''
+            SELECT word, word_id FROM vocab
+            WHERE is_board_word = 0
+        ''')
+        return self.cursor.fetchall()
+
+
     def __enter__(self):
         return self
     
