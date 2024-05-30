@@ -1,14 +1,22 @@
 import numpy as np
-from src.dataset import CodeGiverDataset
+from src.database.orm import Database
 import faiss
 import torch
 
 class VectorSearch:
-    def __init__(self, dataset: CodeGiverDataset, prune=False, n_dim=768, n_neighbours=32, useGuessData=True) -> None:
-        self.vocab_texts, self.vocab_embeddings = dataset.get_vocab(guess_data=useGuessData) if not prune else dataset.get_pruned_vocab()
-        self.vocab_texts = np.array(self.vocab_texts)
-        # Process embeddings
-        self.vocab_embeddings = np.array(self.vocab_embeddings).astype(np.float32)
+    def __init__(self, db: Database, vocab_path: str, n_dim=768, n_neighbours=32) -> None:
+        vocab_words = db.get_pruned_vocab()
+        
+        unpruned_embeddings = np.load(vocab_path)
+        pruned_embeddings = []
+        texts = []
+        for word in vocab_words:
+            texts.append(word[0])
+            pruned_embeddings.append(unpruned_embeddings[word[1]])
+        
+        self.vocab_texts = np.array(texts)
+        self.vocab_embeddings = np.array(pruned_embeddings, dtype=np.float32)
+
         # Initialize index + add embeddings
         self.index = faiss.IndexHNSWFlat(n_dim, n_neighbours)
         self.index.add(self.vocab_embeddings)
