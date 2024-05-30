@@ -11,12 +11,6 @@ allows for faster access to game data
 word data is stored in an sqlite database, embeddings are stored in a npy file where word_id is assosciated with values in the db
 """
 
-def fill_database(db: Database, board_words: str, vocab_words: str):
-    for i, word in enumerate(board_words):
-        db.insert_board(i, word)
-    for i, word in enumerate(vocab_words):
-        db.insert_vocab(i, word)
-
 print('Opening file')
 with open(VOCAB_DIR, 'r') as f:
     word_data = json.load(f)
