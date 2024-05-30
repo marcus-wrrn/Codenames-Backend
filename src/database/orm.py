@@ -41,7 +41,7 @@ class Database:
     
     def get_board(self):
         self.cursor.execute('''
-            SELECT word FROM board
+            SELECT word, word_id FROM board
             ORDER BY RANDOM()
             LIMIT 25;
         ''')

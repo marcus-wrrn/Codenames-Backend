@@ -3,6 +3,7 @@ from torch import Tensor
 import torch.nn.functional as F
 import random
 import logging
+from src.utils.data_objs import WordColor
 
 def get_device(is_cuda: str):
     if (is_cuda.lower() == 'y' and torch.cuda.is_available()):
@@ -99,3 +100,12 @@ def console_logger(logger_name: str, level=logging.DEBUG) -> logging.Logger:
     console_logger.addHandler(stream_handler)
 
     return console_logger
+
+
+def map_team(team: int | None):
+    if team is None:
+        return None
+    
+    if team == 1:
+        return WordColor.RED
+    return WordColor.BLUE
