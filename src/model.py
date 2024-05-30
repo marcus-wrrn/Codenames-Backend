@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
 import src.utils.utilities as utils
-from database.vector_search import VectorSearch
+from src.database.vector_search import VectorSearch
 from src.reranker import Reranker
 
 class MORSpyManyPooled(nn.Module):

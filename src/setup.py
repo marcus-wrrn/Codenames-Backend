@@ -1,7 +1,7 @@
 import torch
 from src.model import MORSpyFull
 from src.dataset import CodeNamesDataset
-from database.vector_search import VectorSearch                                                                                                                                                                                                                                                                                                                                                                                                     
+from src.database.vector_search import VectorSearch                                                                                                                                                                                                                                                                                                                                                                                                     
 
 def init_model_and_vocab(model_path: str, dataset: CodeNamesDataset, device='cpu') -> tuple[MORSpyFull, VectorSearch]:
     # Initialize data
