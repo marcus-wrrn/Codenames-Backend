@@ -1,7 +1,6 @@
 import sqlite3
 
-
-class ORM:
+class Database:
     def __init__(self, db_path: str) -> None:
         self.conn = sqlite3.connect(db_path)
         self.cursor = self.conn.cursor()
@@ -25,19 +24,20 @@ class ORM:
         ''')
         self.conn.commit()
     
-    def insert_vocab(self, word_id: int, word: str) -> None:
+    def insert_vocab(self, word_id: int, word: str, commit=True) -> None:
         self.cursor.execute('''
             INSERT INTO vocab (word_id, word)
             VALUES (?, ?)
         ''', (word_id, word))
-        self.conn.commit()
+
+        if commit: self.conn.commit()
     
-    def insert_board(self, word_id: int, word: str) -> None:
+    def insert_board(self, word_id: int, word: str, commit=True) -> None:
         self.cursor.execute('''
             INSERT INTO board (word_id, word)
             VALUES (?, ?)
         ''', (word_id, word))
-        self.conn.commit()
+        if commit: self.conn.commit()
     
     def get_board(self):
         self.cursor.execute('''
