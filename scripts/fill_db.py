@@ -17,10 +17,10 @@ with open(VOCAB_DIR, 'r') as f:
 
 # Extract data
 board_words = word_data['codewords']
-board_embeddings = word_data['code_embeddings']
+
 
 vocab_words = word_data['guesses']
-vocab_embeddings = word_data['guess_embeddings']
+
 
 # Fill database
 with Database(DB_PATH) as db:
@@ -32,13 +32,21 @@ with Database(DB_PATH) as db:
     for i, word in enumerate(vocab_words):
         db.insert_vocab(i, word, commit=False)
     db.conn.commit()
+    # Retrieve pruned vocab words to make sure we aren't saving unnessecary data to the vocab embedding file
+    vocab_words = db.get_pruned_vocab()
 
 print('Processing embeddings')
 # Process board embeddings
+board_embeddings = word_data['code_embeddings']
 board_embeddings = np.array(board_embeddings, dtype=np.float32)
 np.save(BOARD_EMB_PATH, board_embeddings)
 
 # Process vocab embeddings
+vocab_embeddings = word_data['guess_embeddings']
+
+# Prune duplicate embeddings used in the board
+vocab_embeddings = [vocab_embeddings[word[1]] for word in vocab_words]
+
 vocab_embeddings = np.array(vocab_embeddings, dtype=np.float32)
 np.save(VOCAB_EMB_PATH, vocab_embeddings)
 
