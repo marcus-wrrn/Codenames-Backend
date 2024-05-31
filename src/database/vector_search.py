@@ -7,15 +7,13 @@ class VectorSearch:
     def __init__(self, db: Database, vocab_path: str, n_dim=768, n_neighbours=32) -> None:
         vocab_words = db.get_pruned_vocab()
         
+        # load vocab embeddings and words
         unpruned_embeddings = np.load(vocab_path)
-        pruned_embeddings = []
-        texts = []
-        for word in vocab_words:
-            texts.append(word[0])
-            pruned_embeddings.append(unpruned_embeddings[word[1]])
-        
-        self.vocab_texts = np.array(texts)
-        self.vocab_embeddings = np.array(pruned_embeddings, dtype=np.float32)
+        vocab_words = db.get_pruned_vocab()
+
+        # Initialize vocab words + embeddings
+        self.vocab_texts = np.array([word[0] for word in vocab_words])
+        self.vocab_embeddings = np.array(unpruned_embeddings[[word[1] for word in vocab_words]], dtype=np.float32)
 
         # Initialize index + add embeddings
         self.index = faiss.IndexHNSWFlat(n_dim, n_neighbours)
@@ -24,8 +22,8 @@ class VectorSearch:
     def vocab_add(self, text: str, emb: torch.Tensor):
         emb.detach().cpu().numpy()
         self.index.add(emb)
-        self.vocab_embeddings.append(emb)
-        self.vocab_words(text)
+        np.append(self.vocab_embeddings, emb)
+        self.vocab_texts(text)
     
     def search(self, logits: torch.Tensor, num_results=20):
         # detach tensor from device and convert it to numpy for faiss compatibility

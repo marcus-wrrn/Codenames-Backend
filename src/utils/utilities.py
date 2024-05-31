@@ -3,7 +3,7 @@ from torch import Tensor
 import torch.nn.functional as F
 import random
 import logging
-from src.utils.data_objs import WordColor
+from src.utils.word_board import WordColor
 
 def get_device(is_cuda: str):
     if (is_cuda.lower() == 'y' and torch.cuda.is_available()):

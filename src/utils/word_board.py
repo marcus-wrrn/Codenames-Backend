@@ -8,7 +8,6 @@ class WordColor(Enum):
     GREY = 3
     BLACK = 4
 
-
 class Word:
     def __init__(self, key: int, word_id: int, word: str, color: WordColor, active=True) -> None:
         self.key = key
@@ -73,8 +72,6 @@ class Board:
                 negative.append(word)
         
         return positive, negative, neutral, assassin
-
-
 
     def to_dict(self):
         return [word.to_dict() for word in self.words]
