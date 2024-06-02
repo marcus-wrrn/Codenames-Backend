@@ -1,18 +1,22 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from src.setup import init_model_and_vocab
-from src.dataset import CodeNamesDataset
 from src.database.orm import Database
-from src.utils.utilities import map_team
+from src.utils.utilities import map_team, console_logger
+from src.utils.model_loader import ModelLoader
 import torch
 import env
 import random
-from src.utils.data_objs import init_gameboard
+from src.utils.word_board import init_gameboard
+import logging
 
 
 #device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 #model, vocab = init_model_and_vocab(MODEL_PATH, dataset, device=device)
+logger = console_logger('console_logger')
+logger.info('Initializing ModelLoader')
+loader = ModelLoader(env.MODEL_PATH, env.DB_PATH, env.VOCAB_EMB_PATH, env.BOARD_EMB_PATH)
 
+logger.info('Initializing Server')
 app = Flask(__name__)
 
 CORS(app) 
@@ -38,10 +42,9 @@ def start_game():
     board = init_gameboard(env.DB_PATH)
 
     hint_word = ''
-    if first_team == bot_team:
-        with Database(env.DB_PATH) as db:
-            db.cursor.execute('SELECT word FROM vocab WHERE word_id = 247')
-            hint_word = db.cursor.fetchone()[0]
+    if first_team == bot_team: hint_word = loader.get_hint_word(board, bot_team)
+    if first_team == human_team: hint_word = loader.get_hint_word(board, human_team)
+        
 
     data = {
         'words': board.to_dict(),

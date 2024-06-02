@@ -47,6 +47,16 @@ class ModelLoader:
             return logits
         except Exception as e:
             return None
+        
+    def get_hint_word(self, board: Board, player_team: WordColor) -> str:
+        model_out = self.inference(board, player_team)
+        
+        if not model_out:
+            return ''
+        
+        highest_scoring_index = torch.argmax(model_out.reranker_out)
+        highest_scoring_word = model_out.texts[0][highest_scoring_index]
+        return highest_scoring_word
 
 
     

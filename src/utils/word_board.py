@@ -13,7 +13,7 @@ class WordColor(Enum):
 @dataclass
 class Word:
     key: int
-    word_id: int
+    id: int
     word: str
     color: WordColor
     active: bool = True

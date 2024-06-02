@@ -8,12 +8,11 @@ class VectorSearch:
         vocab_words = db.get_pruned_vocab()
         
         # load vocab embeddings and words
-        unpruned_embeddings = np.load(vocab_path)
+        self.vocab_embeddings = np.load(vocab_path)
         vocab_words = db.get_pruned_vocab()
 
         # Initialize vocab words + embeddings
         self.vocab_texts = np.array([word[0] for word in vocab_words])
-        self.vocab_embeddings = np.array(unpruned_embeddings[[word[1] for word in vocab_words]], dtype=np.float32)
 
         # Initialize index + add embeddings
         self.index = faiss.IndexHNSWFlat(n_dim, n_neighbours)
