@@ -30,7 +30,7 @@ def get_enemy_team(player_team: WordColor) -> WordColor:
         return WordColor.RED if player_team == WordColor.BLUE else WordColor.BLUE
 
 class Board:
-    def __init__(self, word_objs: tuple, words: list[Word]=None) -> None:
+    def __init__(self, word_objs: tuple=None, words: list[Word]=None) -> None:
         self.words = None
         if words:
             self.words = words
@@ -95,3 +95,21 @@ def init_gameboard(db_path: str):
     with Database(db_path) as db:
         word_objs = db.get_board()
     return Board(word_objs)
+
+def create_board_from_response(db_path: str, word_objs: list[tuple]) -> Board:
+    if not word_objs:
+        raise ValueError('Empty word objects')
+    
+    with Database(db_path) as db:
+        words = []
+        for word_obj in word_objs:
+            key = word_obj['id']
+            text = word_obj['word']
+            color = WordColor(word_obj['colorID'])
+            active = word_obj['active']
+
+            # Find word_id in database
+            word_id = db.get_word_id(text)
+            words.append(Word(key, word_id, text, color, active))
+    
+    return Board(words=words)

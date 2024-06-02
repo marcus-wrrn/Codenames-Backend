@@ -64,6 +64,16 @@ class Database:
             WHERE is_board_word = 0
         ''')
         return self.cursor.fetchall()
+    
+    def get_word_id(self, word: str, from_board=True):
+        # Ensure the table name is safe and valid
+        table = 'board' if from_board else 'vocab'
+        query = f'''
+            SELECT word_id FROM {table}
+            WHERE word = ?
+        '''
+        self.cursor.execute(query, (word,))
+        return self.cursor.fetchone()[0]
 
 
     def __enter__(self):
