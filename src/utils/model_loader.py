@@ -3,6 +3,7 @@ from src.model import MORSpyFull
 from src.reranker import ManyOutObj
 from src.database.orm import Database
 from src.database.vector_search import VectorSearch
+import numpy as np
 import torch
 
 class ModelLoader:
@@ -31,8 +32,21 @@ class ModelLoader:
         model.load_state_dict(torch.load(model_path))
         return model
 
-def inference(board: Board, player_team: WordColor) -> ManyOutObj:
-    pos_words, neg_words, neut_words, assas_word = board.categorize_words(player_team)
+    def inference(self, board: Board, player_team: WordColor) -> ManyOutObj | None:
+        try:
+            board_embs = np.load(self.board_emb_path)
+            pos_embs, neg_embs, neut_embs, assas_emb = board.map_categorized_embeddings(player_team, board_embs)
+
+            pos_embs = torch.tensor(pos_embs, device=self.device).unsqueeze(0)
+            neg_embs = torch.tensor(neg_embs, device=self.device).unsqueeze(0)
+            neut_embs = torch.tensor(neut_embs, device=self.device).unsqueeze(0)
+            assas_emb = torch.tensor(assas_emb, device=self.device).unsqueeze(0)
+            
+            with torch.no_grad():
+                logits = self.model(pos_embs, neg_embs, neut_embs, assas_emb)
+            return logits
+        except Exception as e:
+            return None
 
 
     

@@ -1,6 +1,8 @@
 from enum import Enum
 from src.database.orm import Database
+import numpy as np
 import random
+from dataclasses import dataclass
 
 class WordColor(Enum):
     RED = 1
@@ -8,13 +10,13 @@ class WordColor(Enum):
     GREY = 3
     BLACK = 4
 
+@dataclass
 class Word:
-    def __init__(self, key: int, word_id: int, word: str, color: WordColor, active=True) -> None:
-        self.key = key
-        self.id = word_id
-        self.word = word
-        self.color = color
-        self.active = active
+    key: int
+    word_id: int
+    word: str
+    color: WordColor
+    active: bool = True
     
     def to_dict(self):
         return {
@@ -23,6 +25,9 @@ class Word:
             'colorID': self.color.value,
             'active': self.active
         }
+
+def get_enemy_team(player_team: WordColor) -> WordColor:
+        return WordColor.RED if player_team == WordColor.BLUE else WordColor.BLUE
 
 class Board:
     def __init__(self, word_objs: tuple, words: list[Word]=None) -> None:
@@ -52,25 +57,35 @@ class Board:
         random.shuffle(words)
         return words
 
-    def categorize_words(self, 
-            player_team: WordColor) -> tuple[list[Word], list[Word], list[Word], Word]:
-        """Categorizes words relative to the players team"""
-        positive = []
-        negative = []
-        neutral = []
-        assassin = None
-        for i, word in self.words:
-            if not word.active: continue
-
-            if word.color == player_team:
-                positive.append(word)
-            elif word.color == WordColor.GREY:
-                neutral.append(word)
-            elif word.color == WordColor.BLACK:
-                assassin = word
-            else:
-                negative.append(word)
+    def categorize_words_common(self, words: list[Word], player_team: WordColor) -> tuple[dict[WordColor, list[Word]], Word]:
+        enemy_team = get_enemy_team(player_team)
         
+        categorized_words = {
+            player_team: [],
+            enemy_team: [],
+            WordColor.GREY: [],
+            WordColor.BLACK: []
+        }
+
+        for word in filter(lambda w: w.active, words):
+            categorized_words.get(word.color, categorized_words[WordColor.GREY]).append(word)
+        
+        return categorized_words
+
+    def categorize_words(self, player_team: WordColor) -> tuple[list[Word], list[Word], list[Word], Word]:
+        """Categorizes words relative to the player's team"""
+        categorized_words = self.categorize_words_common(self.words, player_team)
+        return categorized_words[player_team], categorized_words[get_enemy_team(player_team)], categorized_words[WordColor.GREY], categorized_words[WordColor.BLACK][0]
+
+    def map_categorized_embeddings(self, player_team: WordColor, board_embs: np.ndarray) -> tuple[list[np.ndarray], list[np.ndarray], list[np.ndarray], np.ndarray]:
+        """Maps embeddings to categorized words relative to the player's team"""
+        categorized_words = self.categorize_words_common(self.words, player_team)
+
+        positive = [board_embs[word.id] for word in categorized_words[player_team]]
+        negative = [board_embs[word.id] for word in categorized_words[get_enemy_team(player_team)]]
+        neutral = [board_embs[word.id] for word in categorized_words[WordColor.GREY]]
+        assassin = board_embs[categorized_words[WordColor.BLACK][0].id]
+
         return positive, negative, neutral, assassin
 
     def to_dict(self):
