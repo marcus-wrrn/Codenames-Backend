@@ -109,3 +109,6 @@ def map_team(team: int | None):
     if team == 1:
         return WordColor.RED
     return WordColor.BLUE
+
+def get_random_team():
+    return random.choice([WordColor.RED, WordColor.BLUE])

@@ -4,6 +4,7 @@ import os
 import numpy as np
 
 # Adjust the path to ensure the src module can be imported
+# TODO: Change directory structure so that this is not necessary
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from src.database.orm import Database

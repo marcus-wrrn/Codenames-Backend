@@ -2,6 +2,7 @@ import torch
 import torch.nn.functional as F
 from torch import Tensor
 from src.database.vector_search import VectorSearch
+from src.scoring_model import ScoringModel
 import src.utils.utilities as utils
 
 class ManyOutObj:
@@ -49,7 +50,6 @@ class Reranker:
         self.neut_w = neut_weight
         self.assas_w = assas_weight
         self.device = device
-
     
     def _expand_encodings_for_search(self, encs: Tensor):
         """Converts shape input encodings from [batch_size, num_encodings, embedding_size] -> [batch_size, vocab_size, num_encodings, embedding_size]"""
@@ -73,11 +73,15 @@ class Reranker:
         # Find the total number of correct guesses, equal to the index of the first non-zero value
         num_correct = torch.argmax(rewards, dim=2)
 
+        # Find the difference between the lowest correct guess and the highest incorrect guess
+        difference = combined_scores.gather(2, num_correct.unsqueeze(2)).squeeze(2) - combined_scores.gather(2, (num_correct + 1).unsqueeze(2)).squeeze(2)
+        difference = torch.abs(difference)
+
         if reverse:
             # Find the inverse of the positive reward (num incorrect)
-            return (pos_reward.shape[0] - num_correct)
+            return (pos_reward.shape[0] - num_correct) - difference
         
-        return num_correct 
+        return num_correct + difference
 
     def _get_reward_tensor(self, size: int, weight: float, reverse: bool) -> Tensor:
         reward = torch.ones(size).to(self.device) * weight

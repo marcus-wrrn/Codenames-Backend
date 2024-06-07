@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from torch import Tensor
-import utils.utilities as utils
+import src.utils.utilities as utils
 
 
 class ScoringModel(nn.Module):
@@ -31,11 +31,11 @@ class ScoringModel(nn.Module):
                 assas_emb: Tensor,
                 search_out: Tensor) -> Tensor:
         # Cluster embeddings
-        pos_emb = utils.cluster_embeddings(pos_embs, dim=0)
-        neg_emb = utils.cluster_embeddings(neg_embs, dim=0)
-        neut_emb = utils.cluster_embeddings(neut_embs, dim=0)
+        pos_emb = utils.cluster_embeddings(pos_embs, dim=1)
+        neg_emb = utils.cluster_embeddings(neg_embs, dim=1)
+        neut_emb = utils.cluster_embeddings(neut_embs, dim=1)
 
-        cat_emb = torch.cat((pos_emb, neg_emb, neut_emb, assas_emb), dim=0)
+        cat_emb = torch.cat((pos_emb, neg_emb, neut_emb, assas_emb), dim=1)
         cat_emb = cat_emb.expand((search_out.shape[0], -1))
 
         reduced = self.reducer(cat_emb)

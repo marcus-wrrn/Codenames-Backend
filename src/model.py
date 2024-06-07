@@ -37,7 +37,6 @@ class MORSpyManyPooled(nn.Module):
         concatenated = self._get_combined_input(pos_embs, neg_embs, neut_embs, assas_emb)
         intermediary_out = self.fc(concatenated)
         
-        # This should be in a list but I am getting strange results after loading and I am testing to see if it's due to pytorch loading the state dict incorrectly
         model_outs = [F.normalize(layer(intermediary_out), p=2, dim=1) for layer in self.head_layers]
         # Cluster embeddings together
         model_out_stacked = torch.stack(model_outs, dim=1)
