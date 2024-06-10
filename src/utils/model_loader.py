@@ -1,4 +1,4 @@
-from src.utils.word_board import Board, WordColor
+from src.views.word_board import Board, WordColor
 from src.model import MORSpyFull, MORSpyManyPooled
 from src.reranker import ManyOutObj, Reranker
 from src.database.orm import Database

@@ -3,7 +3,8 @@ from flask_cors import CORS
 from src.utils.utilities import map_team, console_logger, get_random_team
 from src.utils.model_loader import ModelLoader
 import env
-from src.utils.word_board import init_gameboard, create_board_from_response
+from src.views.word_board import init_gameboard, create_board_from_response
+from src.views.gameturn import GameLog
 import math
 
 logger = console_logger('console_logger')
@@ -77,6 +78,18 @@ def play_turn():
     }
 
     return jsonify(data)
+
+@app.route('/api/savelog', methods=['POST'])
+def save_log():
+    data = request.json
+    if 'log' not in data:
+        return jsonify({'error': 'Missing required fields'}), 400
+    try:
+        log = GameLog(data['log'], env.DB_PATH)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+    return jsonify({'success': True, 'log': log.to_dict()})
 
 
 if __name__ == '__main__':

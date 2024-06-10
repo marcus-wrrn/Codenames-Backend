@@ -12,15 +12,15 @@ class WordColor(Enum):
 
 @dataclass
 class Word:
-    key: int
-    id: int
+    board_id: int
+    database_id: int
     word: str
     color: WordColor
     active: bool = True
     
     def to_dict(self):
         return {
-            'id': self.key,
+            'id': self.board_id,
             'word': self.word,
             'colorID': self.color.value,
             'active': self.active
