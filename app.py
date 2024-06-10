@@ -33,13 +33,14 @@ def start_game():
     if not turn_data:
         return jsonify({'error': 'Error generating hint word'}), 500
     
-    hint_word, sim_word_keys = turn_data
+    hint_word, sim_word_keys, sim_scores = turn_data
 
     data = {
         'words': board.to_dict(),
         'hint_info': {
             'hint_word': hint_word,
-            'sim_word_ids': sim_word_keys
+            'sim_word_ids': sim_word_keys,
+            'sim_scores': sim_scores
         },
         'current_team': first_team.value
     }
@@ -63,13 +64,14 @@ def play_turn():
     if not turn_data:
         return jsonify({'error': 'Error generating hint word'}), 500
     
-    hint_word, sim_word_keys = turn_data
+    hint_word, sim_word_keys, sim_scores = turn_data
 
     data = {
         'words': board.to_dict(),
         'hint_info': {
             'hint_word': hint_word,
-            'sim_word_ids': sim_word_keys
+            'sim_word_ids': sim_word_keys,
+            'sim_scores': sim_scores
         },
         'current_team': team.value
     }

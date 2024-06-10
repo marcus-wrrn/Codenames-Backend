@@ -23,9 +23,9 @@ class ModelLoader:
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        with Database(db_path) as db:
-            self.vocab = VectorSearch(db, self.vocab_emb_path)
-        
+        # with Database(db_path) as db:
+        #     self.vocab = VectorSearch(db, self.vocab_emb_path)
+        self.vocab = VectorSearch(index_path='./data/', load_from_index=True)
         self.model = self._init_model(self.vocab, model_path)
 
         self.encoder = MORSpyManyPooled()
@@ -63,40 +63,6 @@ class ModelLoader:
             logits = self.model(pos_embs, neg_embs, neut_embs, assas_emb)
         return logits
     
-    # def play_turn(self, board: Board, player_team: WordColor) -> tuple[str, list[int]] | None:
-    #     """Play a turn and return the highest scoring word and the key values of the most similar words"""
-    #     try:           
-    #         pos_embs, neg_embs, neut_embs, assas_emb = self._get_embeddings(board, player_team)
-    #         model_out = self._inference(pos_embs, neg_embs, neut_embs, assas_emb)
-            
-    #         # Get highest scoring word
-    #         highest_scoring_index = torch.argmax(model_out.reranker_out)
-    #         highest_scoring_word = model_out.texts[0][highest_scoring_index]
-
-    #         # Map most similar words
-    #         word_emb = model_out.h_score_emb
-
-    #         pos_embs = pos_embs.squeeze(0)
-    #         neg_embs = neg_embs.squeeze(0)
-    #         neut_embs = neut_embs.squeeze(0)
-
-    #         all_embs = torch.cat((pos_embs, neg_embs, neut_embs, assas_emb), dim=0)
-
-    #         pos_words, neg_words, neut_words, assas_word = board.categorize_words(player_team)
-    #         all_words = pos_words + neg_words + neut_words + [assas_word]
-
-    #         # Find the most similar words to the hint word
-    #         sim_scores = F.cosine_similarity(word_emb, all_embs)
-    #         indices = sim_scores.sort(descending=True).indices
-    #         indices = indices.cpu().numpy()
-    #         word_keys = [all_words[i].key for i in indices]
-
-    #         return highest_scoring_word, word_keys
-
-    #     except Exception as e:
-    #         logging.error(f'Error: {e}')
-    #         return None
-    
     def _encoder_inference(self, pos_embs, neg_embs, neut_embs, assas_emb) -> torch.Tensor:
         with torch.no_grad():
             encoder_logits, _ = self.encoder(pos_embs, neg_embs, neut_embs, assas_emb)
@@ -128,14 +94,14 @@ class ModelLoader:
             word_emb = logits.h_score_emb
             # Find the most similar words to the hint word
             sim_scores = F.cosine_similarity(word_emb, all_embs)
-            indices = sim_scores.sort(descending=True).indices
+            scores, indices = sim_scores.sort(descending=True)
             indices = indices.cpu().numpy()
             word_keys = [all_words[i].key for i in indices]
         except Exception as e:
             logging.error(f'Error: {e}')
             return None
         
-        return highest_scoring_word, word_keys
+        return highest_scoring_word, word_keys, scores.cpu().numpy().tolist()
 
 
         

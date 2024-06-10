@@ -4,6 +4,7 @@ from torch import Tensor
 from src.database.vector_search import VectorSearch
 from src.scoring_model import ScoringModel
 import src.utils.utilities as utils
+import numpy as np
 
 class ManyOutObj:
     """Output object of the ManytoNum models, contains all info needed for training and testing"""
@@ -75,13 +76,27 @@ class Reranker:
 
         # Find the difference between the lowest correct guess and the highest incorrect guess
         difference = combined_scores.gather(2, num_correct.unsqueeze(2)).squeeze(2) - combined_scores.gather(2, (num_correct + 1).unsqueeze(2)).squeeze(2)
-        difference = torch.abs(difference)
+        difference = np.e ** (torch.abs(difference) * 2)
+
+        batch_size, seq_length, word_shape = combined_scores.shape
+        mask = torch.arange(word_shape, device=self.device).expand(batch_size, seq_length, word_shape) < num_correct.unsqueeze(2)
+        
+        # Apply the mask to combined_scores
+        masked_combined_scores = combined_scores * mask
+
+        # Calculate the sum of the scores with the mask applied
+        sum_scores = masked_combined_scores.sum(dim=2)
+
+        num_correct_float = num_correct.float()
+        num_correct_nonzero = torch.where(num_correct_float == 0, torch.ones_like(num_correct_float), num_correct_float)
+
+        mean_scores = (sum_scores / num_correct_nonzero) * 5
 
         if reverse:
             # Find the inverse of the positive reward (num incorrect)
             return (pos_reward.shape[0] - num_correct) - difference
         
-        return num_correct + difference
+        return num_correct + difference + mean_scores
 
     def _get_reward_tensor(self, size: int, weight: float, reverse: bool) -> Tensor:
         reward = torch.ones(size).to(self.device) * weight

@@ -4,7 +4,10 @@ import faiss
 import torch
 
 class VectorSearch:
-    def __init__(self, db: Database, vocab_path: str, n_dim=768, n_neighbours=32) -> None:
+    def __init__(self, db: Database=None, vocab_path: str=None, n_dim=768, n_neighbours=32, load_from_index=False, index_path=None) -> None:
+        if load_from_index:
+            self.load_index(index_path)
+            return
         vocab_words = db.get_pruned_vocab()
         
         # load vocab embeddings and words
@@ -37,6 +40,17 @@ class VectorSearch:
     def index_to_texts(self, index):
         return self.vocab_texts[index]
     
-    def save_index(self, filepath: str):
-        faiss.write_index(self.index, filepath)
+    def save_index(self, filedir: str):
+        index_path = filedir + 'index'
+        faiss.write_index(self.index, index_path)
+        vocab_path = filedir + 'vocab.npy'
+        np.save(vocab_path, self.vocab_embeddings)
+
+    def load_index(self, filedir: str):
+        index_path = filedir + 'index'
+        self.index = faiss.read_index(index_path)
+        vocab_path = filedir + 'vocab.npy'
+        self.vocab_embeddings = np.load(vocab_path)
+        text_path = filedir + 'vocab_texts.npy'
+        self.vocab_texts = np.load(text_path)
     
