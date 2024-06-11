@@ -81,10 +81,10 @@ class Board:
         """Maps embeddings to categorized words relative to the player's team"""
         categorized_words = self.categorize_words_common(self.words, player_team)
 
-        positive = [board_embs[word.id] for word in categorized_words[player_team]]
-        negative = [board_embs[word.id] for word in categorized_words[get_enemy_team(player_team)]]
-        neutral = [board_embs[word.id] for word in categorized_words[WordColor.GREY]]
-        assassin = board_embs[categorized_words[WordColor.BLACK][0].id]
+        positive = [board_embs[word.database_id] for word in categorized_words[player_team]]
+        negative = [board_embs[word.database_id] for word in categorized_words[get_enemy_team(player_team)]]
+        neutral = [board_embs[word.database_id] for word in categorized_words[WordColor.GREY]]
+        assassin = board_embs[categorized_words[WordColor.BLACK][0].database_id]
 
         return positive, negative, neutral, assassin
 

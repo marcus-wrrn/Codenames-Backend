@@ -23,6 +23,29 @@ class Database:
                 word_id INTEGER UNIQUE
             );
         ''')
+
+        # self.cursor.execute('''
+        #     CREATE TABLE IF NOT EXISTS past_games (
+        #         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        #         game_id INTEGER UNIQUE,
+        #         game_word_ids TEXT,
+                
+        #     );
+        # ''')
+
+        # self.cursor.execute('''
+        #     CREATE TABLE IF NOT EXISTS game_turn (
+        #         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        #         game_id INTEGER,
+        #         turn_number INTEGER,
+        #         is_robot BOOLEAN,
+        #         hint_info TEXT, 
+        #         chosen_words TEXT,
+                
+        #     );
+        # ''')
+
+
         self.conn.commit()
     
     def insert_vocab(self, word_id: int, word: str, commit=True) -> None:

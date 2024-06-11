@@ -82,14 +82,27 @@ def play_turn():
 @app.route('/api/savelog', methods=['POST'])
 def save_log():
     data = request.json
-    if 'log' not in data:
+    origin_ip = request.remote_addr
+    if 'log' not in data and 'game_words' not in data and 'word_colorIDs' not in data:
         return jsonify({'error': 'Missing required fields'}), 400
     try:
         log = GameLog(data['log'], env.DB_PATH)
+        game_words = data['game_words']
+        word_colorIDs = data['word_colorIDs']
+
+        data = {
+            'log': log.to_dict(),
+            'game_words': game_words,
+            'word_colorIDs': word_colorIDs,
+            'origin_ip': origin_ip
+        }
+        
+        with open('./data/logs.txt', 'a') as f:
+            f.write(str(data) + '\n')
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     
-    return jsonify({'success': True, 'log': log.to_dict()})
+    return jsonify({'success': True, 'log': log.to_dict() })
 
 
 if __name__ == '__main__':

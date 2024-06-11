@@ -96,12 +96,12 @@ class ModelLoader:
             sim_scores = F.cosine_similarity(word_emb, all_embs)
             scores, indices = sim_scores.sort(descending=True)
             indices = indices.cpu().numpy()
-            word_keys = [all_words[i].key for i in indices]
+            board_ids = [all_words[i].board_id for i in indices]
         except Exception as e:
             logging.error(f'Error: {e}')
             return None
         
-        return highest_scoring_word, word_keys, scores.cpu().numpy().tolist()
+        return highest_scoring_word, board_ids, scores.cpu().numpy().tolist()
 
 
         

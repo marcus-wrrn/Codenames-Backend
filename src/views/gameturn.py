@@ -23,29 +23,25 @@ class GameLog:
 class GameTurn:
     def __init__(self, turn_data, db: Database) -> None:
         if 'team' not in turn_data or 'chosenWords' not in turn_data or 'words' not in turn_data or 'hintInfo' not in turn_data:
-            raise ValueError('Missing required fields')
+            raise ValueError('Missing required fields in turn object')
 
         self.team = Team.PLAYER if turn_data['team'] == 1 else Team.BOT
 
-        self.words = self.process_words(turn_data['words'], db)
-        self.chosen_words = self.process_words(turn_data['chosenWords'], db)
-        self.hint_word, self.sim_word_ids, self.sim_scores = self.process_hint_info(turn_data['hintInfo'])
+        self.words = self._process_words(turn_data['words'], db)
+        self.chosen_words = self._process_words(turn_data['chosenWords'], db, is_chosen=True)
+        self.hint_word, self.sim_word_ids, self.sim_scores = self._process_hint_info(turn_data['hintInfo'])
     
-    def process_words(self, words: list[dict], db: Database) -> None:
-        # get word ids
-        word_objs = []
+    def _process_words(self, words: list[dict], db: Database, is_chosen=False) -> None:
         for word in words:
-            if 'id' not in word or 'word' not in word or 'colorID' not in word or 'active' not in word:
-                raise ValueError('Missing required fields')
-            
+            if 'word' not in word or 'colorID' not in word or (not is_chosen and 'active' not in word):
+                raise ValueError(f'Missing required fields in word object: {word}')
             database_id = db.get_word_id(word['word'])
-            word_objs.append(Word(word['id'], database_id, word['word'], WordColor(word['colorID']), word['active']))
-        
-        return word_objs
+            word['database_id'] = database_id
+        return words
 
-    def process_hint_info(self, hint_info: dict):
+    def _process_hint_info(self, hint_info: dict):
         if 'hint_word' not in hint_info or 'sim_word_ids' not in hint_info or 'sim_scores' not in hint_info:
-            raise ValueError('Missing required fields')
+            raise ValueError('Missing required fields in hint info object')
         
         hint_word = hint_info['hint_word']
         sim_word_ids = hint_info['sim_word_ids']
@@ -56,8 +52,8 @@ class GameTurn:
     def to_dict(self):
         return {
             'team': self.team.value,
-            'words': [word.to_dict() for word in self.words],
-            'chosenWords': [word.to_dict() for word in self.chosen_words],
+            'words': self.words,
+            'chosenWords': self.chosen_words,
             'hint_info': {
                 'hint_word': self.hint_word,
                 'sim_word_ids': self.sim_word_ids,

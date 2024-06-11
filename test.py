@@ -1,5 +1,5 @@
 from src.utils.model_loader import ModelLoader
-from views.word_board import WordColor, init_gameboard
+from src.views.word_board import WordColor, init_gameboard
 from env import DB_PATH
 
 
