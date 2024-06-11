@@ -1,10 +1,10 @@
 import numpy as np
-from src.database.orm import Database
+from src.database.orm import WordDatabase
 import faiss
 import torch
 
 class VectorSearch:
-    def __init__(self, db: Database=None, vocab_path: str=None, n_dim=768, n_neighbours=32, load_from_index=False, index_path=None) -> None:
+    def __init__(self, db: WordDatabase=None, vocab_path: str=None, n_dim=768, n_neighbours=32, load_from_index=False, index_path=None) -> None:
         if load_from_index:
             self.load_index(index_path)
             return

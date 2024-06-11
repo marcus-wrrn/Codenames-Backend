@@ -5,7 +5,7 @@ from src.utils.model_loader import ModelLoader
 import env
 from src.views.word_board import init_gameboard, create_board_from_response
 from src.views.gameturn import GameLog
-import math
+
 
 logger = console_logger('console_logger')
 logger.info('Initializing ModelLoader')
@@ -100,7 +100,12 @@ def save_log():
         with open('./data/logs.txt', 'a') as f:
             f.write(str(data) + '\n')
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error processing data': str(e)}), 500
+    
+    # try:
+    #     ...
+    # except Exception as e:
+    #     return jsonify({'error saving log': str(e)}), 500
     
     return jsonify({'success': True, 'log': log.to_dict() })
 

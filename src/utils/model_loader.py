@@ -1,7 +1,7 @@
 from src.views.word_board import Board, WordColor
 from src.model import MORSpyFull, MORSpyManyPooled
 from src.reranker import ManyOutObj, Reranker
-from src.database.orm import Database
+from src.database.orm import WordDatabase
 from src.database.vector_search import VectorSearch
 from env import MODEL_PATH, DB_PATH, VOCAB_EMB_PATH, BOARD_EMB_PATH, ENCODER_PATH
 import numpy as np

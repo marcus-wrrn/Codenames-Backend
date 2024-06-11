@@ -1,5 +1,5 @@
 from enum import Enum
-from src.database.orm import Database
+from src.database.orm import WordDatabase
 import numpy as np
 import random
 from dataclasses import dataclass
@@ -92,7 +92,7 @@ class Board:
         return [word.to_dict() for word in self.words]
     
 def init_gameboard(db_path: str):
-    with Database(db_path) as db:
+    with WordDatabase(db_path) as db:
         word_objs = db.get_board()
     return Board(word_objs)
 
@@ -100,7 +100,7 @@ def create_board_from_response(db_path: str, word_objs: list[tuple]) -> Board:
     if not word_objs:
         raise ValueError('Empty word objects')
     
-    with Database(db_path) as db:
+    with WordDatabase(db_path) as db:
         words = []
         for word_obj in word_objs:
             key = word_obj['id']

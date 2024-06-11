@@ -1,6 +1,6 @@
-from src.database.orm import Database
+from src.database.orm import WordDatabase
 from src.database.vector_search import VectorSearch
-from env import VOCAB_DIR, DB_PATH, BOARD_EMB_PATH, VOCAB_EMB_PATH
+from env import VOCAB_DIR, DB_PATH, BOARD_EMB_PATH, VOCAB_EMB_PATH, BAD_WORDS_PATH
 import numpy as np
 import json
 
@@ -15,15 +15,16 @@ print('Opening file')
 with open(VOCAB_DIR, 'r') as f:
     word_data = json.load(f)
 
+with open(BAD_WORDS_PATH, 'r') as f:
+    bad_words = f.read().splitlines()
+
 # Extract data
 board_words = word_data['codewords']
-
-
 vocab_words = word_data['guesses']
 
 
 # Fill database
-with Database(DB_PATH) as db:
+with WordDatabase(DB_PATH) as db:
     print('Loading board data')
     for i, word in enumerate(board_words):
         db.insert_board(i, word, commit=False)
@@ -32,9 +33,14 @@ with Database(DB_PATH) as db:
     for i, word in enumerate(vocab_words):
         db.insert_vocab(i, word, commit=False)
     db.conn.commit()
+
+    for i, word in enumerate(bad_words):
+        db.insert_bad_word(i, word, commit=False)
+    db.conn.commit()
     # Retrieve pruned vocab words to make sure we aren't saving unnessecary data to the vocab embedding file
     vocab_words = db.get_pruned_vocab()
 
+# Don't bother with bad_word embeddings as they were processed in a seperate script
 print('Processing embeddings')
 # Process board embeddings
 board_embeddings = word_data['code_embeddings']

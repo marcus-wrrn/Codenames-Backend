@@ -7,7 +7,7 @@ import numpy as np
 # TODO: Change directory structure so that this is not necessary
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src.database.orm import Database
+from src.database.orm import WordDatabase
 import env
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 class TestDatabase(unittest.TestCase):
     def setUp(self):
         # Yes I'm using the same db path, should not be an issue as a new db can be generated rapidly
-        self.db = Database(env.DB_PATH)
+        self.db = WordDatabase(env.DB_PATH)
     
     def tearDown(self):
         self.db.conn.close()

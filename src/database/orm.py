@@ -1,6 +1,6 @@
 import sqlite3
 
-class Database:
+class WordDatabase:
     def __init__(self, db_path: str) -> None:
         self.conn = sqlite3.connect(db_path)
         self.cursor = self.conn.cursor()
@@ -24,27 +24,13 @@ class Database:
             );
         ''')
 
-        # self.cursor.execute('''
-        #     CREATE TABLE IF NOT EXISTS past_games (
-        #         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        #         game_id INTEGER UNIQUE,
-        #         game_word_ids TEXT,
-                
-        #     );
-        # ''')
-
-        # self.cursor.execute('''
-        #     CREATE TABLE IF NOT EXISTS game_turn (
-        #         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        #         game_id INTEGER,
-        #         turn_number INTEGER,
-        #         is_robot BOOLEAN,
-        #         hint_info TEXT, 
-        #         chosen_words TEXT,
-                
-        #     );
-        # ''')
-
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS bad_words (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                word TEXT,
+                word_id INTEGER UNIQUE
+            );
+        ''')
 
         self.conn.commit()
     
@@ -73,6 +59,13 @@ class Database:
         ''', (word_id, word))
         if commit: self.conn.commit()
     
+    def insert_bad_word(self, word_id: int, word: str, commit=True) -> None:
+        self.cursor.execute('''
+            INSERT INTO bad_words (word_id, word)
+            VALUES (?, ?)
+        ''', (word_id, word))
+        if commit: self.conn.commit()
+    
     def get_board(self):
         self.cursor.execute('''
             SELECT word, word_id FROM board
@@ -80,6 +73,21 @@ class Database:
             LIMIT 25;
         ''')
         return self.cursor.fetchall()
+    
+    def get_random_bad_words(self, num=15):
+        self.cursor.execute('''
+            SELECT word, word_id FROM bad_words
+            ORDER BY RANDOM()
+            LIMIT ?;
+        ''', (num,))
+        return self.cursor.fetchall()
+    
+    def get_bad_word(self, word: str):
+        self.cursor.execute('''
+            SELECT word_id FROM bad_words
+            WHERE word = ?
+        ''', (word,))
+        return self.cursor.fetchone()
     
     def get_pruned_vocab(self):
         self.cursor.execute('''
