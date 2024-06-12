@@ -5,6 +5,7 @@ from src.utils.model_loader import ModelLoader
 import env
 from src.views.word_board import init_gameboard, create_board_from_response
 from src.views.gameturn import GameLog
+from src.database.gamelog import GameLogDatabase
 
 
 logger = console_logger('console_logger')
@@ -82,30 +83,22 @@ def play_turn():
 @app.route('/api/savelog', methods=['POST'])
 def save_log():
     data = request.json
-    origin_ip = request.remote_addr
+    
     if 'log' not in data and 'game_words' not in data and 'word_colorIDs' not in data:
         return jsonify({'error': 'Missing required fields'}), 400
     try:
         log = GameLog(data['log'], env.DB_PATH)
         game_words = data['game_words']
         word_colorIDs = data['word_colorIDs']
-
-        data = {
-            'log': log.to_dict(),
-            'game_words': game_words,
-            'word_colorIDs': word_colorIDs,
-            'origin_ip': origin_ip
-        }
-        
-        with open('./data/logs.txt', 'a') as f:
-            f.write(str(data) + '\n')
+        origin_ip = request.remote_addr
     except Exception as e:
         return jsonify({'error processing data': str(e)}), 500
     
-    # try:
-    #     ...
-    # except Exception as e:
-    #     return jsonify({'error saving log': str(e)}), 500
+    try:
+        with GameLogDatabase(collection_name="logs_with_ids") as db:
+            db.save_log(log, game_words, word_colorIDs, origin_ip)
+    except Exception as e:
+        return jsonify({'error saving log': str(e)}), 500
     
     return jsonify({'success': True, 'log': log.to_dict() })
 
