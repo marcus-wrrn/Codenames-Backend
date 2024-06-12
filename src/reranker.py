@@ -2,7 +2,6 @@ import torch
 import torch.nn.functional as F
 from torch import Tensor
 from src.database.vector_search import VectorSearch
-from src.scoring_model import ScoringModel
 import src.utils.utilities as utils
 import numpy as np
 
@@ -76,7 +75,7 @@ class Reranker:
 
         # Find the difference between the lowest correct guess and the highest incorrect guess
         difference = combined_scores.gather(2, num_correct.unsqueeze(2)).squeeze(2) - combined_scores.gather(2, (num_correct + 1).unsqueeze(2)).squeeze(2)
-        difference = (torch.abs(difference)) * 2
+        difference = torch.abs(difference) * 2
 
         batch_size, seq_length, word_shape = combined_scores.shape
         mask = torch.arange(word_shape, device=self.device).expand(batch_size, seq_length, word_shape) < num_correct.unsqueeze(2)

@@ -104,20 +104,6 @@ class ModelLoader:
         return highest_scoring_word, board_ids, scores.cpu().numpy().tolist()
 
 
-        
-    def get_hint_word(self, board: Board, player_team: WordColor) -> str:
-        model_out = self.play_turn(board, player_team)
-
-        if not model_out:
-            return ''
-        
-        highest_scoring_index = torch.argmax(model_out.reranker_out)
-        highest_scoring_word = model_out.texts[0][highest_scoring_index]
-
-
-        return highest_scoring_word
-
-
 
 
 
