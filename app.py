@@ -19,13 +19,6 @@ CORS(app)
 
 @app.route('/api/startgame')
 def start_game():
-    # if 'first_team' not in data:
-    #     return jsonify({'error': 'Missing required fields'}), 400
-    
-    # try:
-    #     first_team = map_team(data['first_team'])
-    # except Exception as e:
-    #     return jsonify({'error': str(e)}), 400
     first_team = get_random_team()
 
     board = init_gameboard(env.DB_PATH)
