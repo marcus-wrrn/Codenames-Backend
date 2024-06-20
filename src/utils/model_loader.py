@@ -8,6 +8,8 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 import logging
+from sentence_transformers import SentenceTransformer
+
 
 class ModelLoader:
     def __init__(self, 
@@ -26,8 +28,8 @@ class ModelLoader:
         # with Database(db_path) as db:
         #     self.vocab = VectorSearch(db, self.vocab_emb_path)
         self.vocab = VectorSearch(index_path='./data/', load_from_index=True)
-        self.model = self._init_model(self.vocab, model_path)
-
+        #self.model = self._init_model(self.vocab, model_path)
+        self.semantic_backbone = SentenceTransformer('all-mpnet-base-v2')
         self.encoder = MORSpyManyPooled()
         self.encoder.to(self.device)
         self.encoder.load_state_dict(torch.load(encoder_path))
@@ -86,10 +88,11 @@ class ModelLoader:
             neg_embs = neg_embs.squeeze(0)
             neut_embs = neut_embs.squeeze(0)
 
-            all_embs = torch.cat((pos_embs, neg_embs, neut_embs, assas_emb), dim=0)
-
             pos_words, neg_words, neut_words, assas_word = board.categorize_words(player_team)
+            
+            # map words and embeddings
             all_words = pos_words + neg_words + neut_words + [assas_word]
+            all_embs = torch.cat((pos_embs, neg_embs, neut_embs, assas_emb), dim=0)
 
             word_emb = logits.h_score_emb
             # Find the most similar words to the hint word
@@ -102,6 +105,16 @@ class ModelLoader:
             return None
         
         return highest_scoring_word, board_ids, scores.cpu().numpy().tolist()
+    
+    def search_vocabulary(self, query: str, num_words=20) -> list[str]:
+        # encode query
+        query = self.semantic_backbone.encode(query, convert_to_tensor=True).unsqueeze(0)
+        texts, embs, dist = self.vocab.search(query, num_results=num_words)
+        texts = texts[0]
+        embs = torch.tensor(embs, device=self.device).squeeze(0)
+        scores = F.cosine_similarity(query, embs)
+        avg_score = scores.mean().item()
+        return texts.tolist(), scores.tolist(), avg_score
 
 
 

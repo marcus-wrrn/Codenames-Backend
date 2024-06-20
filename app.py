@@ -95,6 +95,26 @@ def save_log():
     
     return jsonify({'success': True, 'log': log.to_dict() })
 
+@app.route('/api/get_sim_texts', methods=['POST'])
+def get_sim_texts():
+    data = request.json
+    if 'word' not in data:
+        return jsonify({'error': 'Missing required fields'}), 400
+    word = data['word']
+    num_results = 20
+    if 'num_results' in data:
+        num_results = data['num_results'] if type(data['num_results']) == int else num_results
+    try:
+        texts, scores, avg_score = loader.search_vocabulary(word, num_results)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+    data = {
+        'texts': texts,
+        'scores': scores,
+        'avg_score': avg_score
+    }
+    return jsonify(data)
 
 if __name__ == '__main__':
     app.run(debug=True)
