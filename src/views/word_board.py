@@ -11,7 +11,7 @@ class WordColor(Enum):
     BLACK = 4
 
 @dataclass
-class Word:
+class BoardWord:
     board_id: int
     database_id: int
     word: str
@@ -30,7 +30,7 @@ def get_enemy_team(player_team: WordColor) -> WordColor:
         return WordColor.RED if player_team == WordColor.BLUE else WordColor.BLUE
 
 class Board:
-    def __init__(self, word_objs: tuple=None, words: list[Word]=None) -> None:
+    def __init__(self, word_objs: tuple=None, words: list[BoardWord]=None) -> None:
         self.words = None
         if words:
             self.words = words
@@ -51,13 +51,13 @@ class Board:
             elif i == len(word_objs) - 1:
                 color = WordColor.BLACK
             
-            words.append(Word(i, word_id, word, color))
+            words.append(BoardWord(i, word_id, word, color))
         
         # Randomize word order
         random.shuffle(words)
         return words
 
-    def categorize_words_common(self, words: list[Word], player_team: WordColor) -> tuple[dict[WordColor, list[Word]], Word]:
+    def categorize_words_common(self, words: list[BoardWord], player_team: WordColor) -> tuple[dict[WordColor, list[BoardWord]], BoardWord]:
         enemy_team = get_enemy_team(player_team)
         
         categorized_words = {
@@ -72,7 +72,7 @@ class Board:
         
         return categorized_words
 
-    def categorize_words(self, player_team: WordColor) -> tuple[list[Word], list[Word], list[Word], Word]:
+    def categorize_words(self, player_team: WordColor) -> tuple[list[BoardWord], list[BoardWord], list[BoardWord], BoardWord]:
         """Categorizes words relative to the player's team"""
         categorized_words = self.categorize_words_common(self.words, player_team)
         return categorized_words[player_team], categorized_words[get_enemy_team(player_team)], categorized_words[WordColor.GREY], categorized_words[WordColor.BLACK][0]
@@ -110,6 +110,6 @@ def create_board_from_response(db_path: str, word_objs: list[tuple]) -> Board:
 
             # Find word_id in database
             word_id = db.get_word_id(text)
-            words.append(Word(key, word_id, text, color, active))
+            words.append(BoardWord(key, word_id, text, color, active))
     
     return Board(words=words)
