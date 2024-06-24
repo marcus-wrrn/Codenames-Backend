@@ -4,7 +4,8 @@ from src.utils.utilities import map_team, console_logger, get_random_team
 from src.utils.model_loader import ModelLoader
 import env
 from src.views.word_board import init_gameboard, create_board_from_response
-from src.views.gameturn import GameLog
+from src.views.gameturn import GameLog, GameTurn
+from src.database.orm import WordDatabase
 from src.database.gamelog import GameLogDatabase
 
 
@@ -47,6 +48,11 @@ def play_turn():
     data = request.json
     if 'team' not in data or 'words' not in data:
         return jsonify({'error': 'Missing required fields'}), 400
+    if 'past_turn' in data:
+        with WordDatabase(env.DB_PATH) as db:
+            turn = GameTurn(data['past_turn'], db)
+        loader.process_turn(turn)
+
     
     try:
         team = map_team(data['team'])
@@ -78,6 +84,12 @@ def save_log():
     data = request.json
     if 'save_info' not in data:
         return jsonify({'error': 'Missing required fields: save_info'}), 400
+    
+    if 'past_turn' in data:
+        with WordDatabase(env.DB_PATH) as db:
+            turn = GameTurn(data['past_turn'], db)
+        if turn.team == 1:
+            loader.process_turn(turn)
     
     game_info = data['save_info']
     if 'log' not in game_info and 'game_words' not in game_info and 'word_colorIDs' not in game_info:

@@ -4,6 +4,8 @@ import torch.nn.functional as F
 import random
 import logging
 from src.views.word_board import WordColor
+from src.views.gameturn import TurnWord
+import numpy as np
 
 def get_device(is_cuda: str):
     if (is_cuda.lower() == 'y' and torch.cuda.is_available()):
@@ -112,3 +114,49 @@ def map_team(team: int | None):
 
 def get_random_team():
     return random.choice([WordColor.RED, WordColor.BLUE])
+
+def adain(x: np.ndarray, y: np.ndarray, use_max=True) -> np.ndarray:
+    """Adaptive instance normalization between two numpy arrays"""
+    if x.size == 0 or y.size == 0:
+        return x.copy()
+    # To avoid division by zero
+    div_zero_offset = 0.0000000000000001
+    # Calculate the mean and standard deviation of x and y
+    std_x = x.std() + div_zero_offset
+    std_y = y.std() + div_zero_offset
+    mean_x = x.mean()
+    mean_y = y.max() if use_max else y.min()
+    return ((x - mean_x) / std_x) * std_y + mean_y
+
+def get_expected_choices_and_scores(words: list[TurnWord], sim_scores: list[float], sim_ids: list[int], team_value: int):
+    ordered_words = sorted(words, key=lambda x: x.id)
+    ordered_words = [ordered_words[i] for i in sim_ids]
+    expected_scores = []
+    expected_words = []
+    for i, word in enumerate(ordered_words):
+        expected_scores.append(sim_scores[i])
+        expected_words.append(word)
+        if (word.colorID != team_value):
+            break
+    return np.array(expected_words), np.array(expected_scores)
+
+def get_chosen_scores(chosen_words: list[TurnWord], sim_scores: list[float], sim_ids: list[int]):
+    chosen_ids = [word.id for word in chosen_words]
+    sim_id_to_score = {sim_id: score for sim_id, score in zip(sim_ids, sim_scores)}
+    chosen_scores = np.array([sim_id_to_score[id] for id in chosen_ids if id in sim_id_to_score])
+
+    return chosen_scores
+
+def prune_words(expected_words, expected_scores, chosen_words):
+    # Remove words from expected choices that have already been chosen
+    chosen_ids = {word.id for word in chosen_words}  # Use a set for faster lookup
+
+    pruned_words = []
+    pruned_scores = []
+
+    for word, score in zip(expected_words, expected_scores):
+        if word.id not in chosen_ids:
+            pruned_words.append(word)
+            pruned_scores.append(score)
+
+    return np.array(pruned_words), np.array(pruned_scores)

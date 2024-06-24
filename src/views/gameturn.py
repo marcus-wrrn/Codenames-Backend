@@ -66,7 +66,7 @@ class GameTurn:
                 raise ValueError(f'Missing required fields in word object: {word}')
             database_id = db.get_word_id(word['word'])
             word['database_id'] = database_id
-            if is_chosen:
+            if is_chosen and 'active' not in word:
                 word_data.append(TurnWord(**word))
             else:
                 word_data.append(ActiveTurnWord(**word))

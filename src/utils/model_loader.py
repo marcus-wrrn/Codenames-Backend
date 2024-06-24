@@ -3,9 +3,12 @@ from src.model import MORSpyFull, MORSpyManyPooled
 from src.reranker import ManyOutObj, Reranker
 from src.database.orm import WordDatabase
 from src.database.vector_search import VectorSearch
+from src.views.gameturn import GameTurn
+import src.utils.utilities as utils
 from env import MODEL_PATH, DB_PATH, VOCAB_EMB_PATH, BOARD_EMB_PATH, ENCODER_PATH
 import numpy as np
 import torch
+from torch import Tensor
 import torch.nn.functional as F
 import logging
 from sentence_transformers import SentenceTransformer
@@ -115,9 +118,51 @@ class ModelLoader:
         scores = F.cosine_similarity(query, embs)
         avg_score = scores.mean().item()
         return texts.tolist(), scores.tolist(), avg_score
-
-
-
-
-
     
+    def modify_embeddings(self, anchor: Tensor, embs: Tensor, score_vector: Tensor) -> np.ndarray:
+        anchor = anchor.unsqueeze(0).repeat(embs.shape[0], 1)
+        modify_amount = anchor - embs
+        modify_amount = modify_amount * score_vector.unsqueeze(1)
+        return F.normalize(modify_amount + embs, p=2, dim=1).cpu().numpy()
+
+    def process_turn(self, turn: GameTurn):
+        # Get expected turn data
+        sim_scores = turn.sim_scores
+        sim_ids = turn.sim_word_ids
+
+        # Get player chosen data
+        chosen_words = turn.chosen_words
+        chosen_scores = utils.get_chosen_scores(chosen_words, sim_scores, sim_ids)
+
+        # Find expected choices
+        expected_words, expected_scores = utils.get_expected_choices_and_scores(turn.words, sim_scores, sim_ids, turn.team.value)
+
+        # remove words from expected choices that have already been chosen
+        expected_words, expected_scores = utils.prune_words(expected_words, expected_scores, chosen_words)
+        if len(expected_words) == 0:
+            return
+
+        # Calculate modified scores
+        chosen_modified = utils.adain(chosen_scores, expected_scores)
+        expected_modified = utils.adain(expected_scores, chosen_scores, use_max=False)
+
+        # Map embeddings
+        board_embeddings = np.load(self.board_emb_path)
+        chosen_embeddings = torch.tensor([board_embeddings[word.database_id] for word in chosen_words], device=self.device)
+        expected_embeddings = torch.tensor([board_embeddings[word.database_id] for word in expected_words], device=self.device)
+
+        vocab_id = np.where(self.vocab.vocab_texts == turn.hint_word)[0][0]
+        hint_embedding = torch.tensor(self.vocab.vocab_embeddings[vocab_id], device=self.device)
+        
+        modify_chosen_amount = torch.tensor(chosen_modified - chosen_scores, device=self.device)
+        modify_expected_amount = torch.tensor(expected_modified - expected_scores, device=self.device)
+
+        modified_chosen_embs = self.modify_embeddings(hint_embedding, chosen_embeddings, modify_chosen_amount)
+        modified_expected_embs = self.modify_embeddings(hint_embedding, expected_embeddings, modify_expected_amount)
+
+        for i, word in enumerate(chosen_words):
+            board_embeddings[word.database_id] = modified_chosen_embs[i]
+        for i, word in enumerate(expected_words):
+            board_embeddings[word.database_id] = modified_expected_embs[i]
+        
+        np.save(self.board_emb_path, board_embeddings)

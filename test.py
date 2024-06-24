@@ -12,3 +12,4 @@ board = init_gameboard(DB_PATH)
 texts, scores, avg_score = loader.search_vocabulary("hello")
 
 print()
+
