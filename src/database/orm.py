@@ -106,6 +106,17 @@ class WordDatabase:
         self.cursor.execute(query, (word,))
         return self.cursor.fetchone()[0]
 
+    def get_all_board_words(self):
+        self.cursor.execute('''
+            SELECT word, word_id FROM board
+        ''')
+        return self.cursor.fetchall()
+    
+    def get_all_vocab_words(self):
+        self.cursor.execute('''
+            SELECT word, word_id FROM vocab
+        ''')
+        return self.cursor.fetchall()
 
     def __enter__(self):
         return self
