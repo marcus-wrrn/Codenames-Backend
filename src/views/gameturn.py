@@ -35,6 +35,7 @@ class ActiveTurnWord(TurnWord):
         }
 
 class GameLog:
+    """Log of an entire game of codenames"""
     def __init__(self, log_data: list, db_path: str) -> None:
         try:
             with WordDatabase(db_path) as db:
@@ -49,6 +50,7 @@ class GameLog:
 
 
 class GameTurn:
+    """Contains all information about a single game turn"""
     def __init__(self, turn_data, db: WordDatabase) -> None:
         if 'team' not in turn_data or 'chosenWords' not in turn_data or 'words' not in turn_data or 'hintInfo' not in turn_data:
             raise ValueError('Missing required fields in turn object')

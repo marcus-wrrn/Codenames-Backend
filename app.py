@@ -52,8 +52,6 @@ def play_turn():
         with WordDatabase(env.DB_PATH) as db:
             turn = GameTurn(data['past_turn'], db)
         loader.process_turn(turn)
-
-    
     try:
         team = map_team(data['team'])
         board = create_board_from_response(env.DB_PATH, data['words'])
