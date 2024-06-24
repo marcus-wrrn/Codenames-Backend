@@ -5,7 +5,7 @@ from src.database.orm import WordDatabase
 from src.database.vector_search import VectorSearch
 from src.views.gameturn import GameTurn
 import src.utils.utilities as utils
-from env import MODEL_PATH, DB_PATH, VOCAB_EMB_PATH, BOARD_EMB_PATH, ENCODER_PATH
+from env import MODEL_PATH, DB_PATH, VOCAB_EMB_PATH, BOARD_EMB_PATH, ENCODER_PATH, UNMODIFIED_BOARD_EMB_PATH
 import numpy as np
 import torch
 from torch import Tensor
@@ -20,11 +20,13 @@ class ModelLoader:
                  encoder_path=ENCODER_PATH,
                  db_path=DB_PATH, 
                  vocab_emb_path=VOCAB_EMB_PATH, 
-                 board_emb_path=BOARD_EMB_PATH) -> None:
+                 board_emb_path=BOARD_EMB_PATH,
+                 unmodified_board_emb_path=UNMODIFIED_BOARD_EMB_PATH) -> None:
         # Set the paths for the database and vocabulary
         self.db_path = db_path
         self.vocab_emb_path = vocab_emb_path
         self.board_emb_path = board_emb_path
+        self.unmodified_board_emb_path = unmodified_board_emb_path
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -109,13 +111,20 @@ class ModelLoader:
         
         return highest_scoring_word, board_ids, scores.cpu().numpy().tolist()
     
-    def search_vocabulary(self, query: str, num_words=20) -> list[str]:
-        # encode query
-        query = self.semantic_backbone.encode(query, convert_to_tensor=True).unsqueeze(0)
-        texts, embs, dist = self.vocab.search(query, num_results=num_words)
+    def search_vocabulary(self, query: str=None, board_id: int=None, num_words=20) -> list[str]:
+        if query is None and board_id is None:
+            raise ValueError("Either query or board_id must be provided")
+        
+        if query:
+            query_embedding = self.semantic_backbone.encode(query, convert_to_tensor=True).unsqueeze(0)
+        else:
+            board_embeddings = np.load(self.board_emb_path)
+            query_embedding = torch.tensor(board_embeddings[board_id], device=self.device).unsqueeze(0)
+
+        texts, embs, dist = self.vocab.search(query_embedding, num_results=num_words)
         texts = texts[0]
         embs = torch.tensor(embs, device=self.device).squeeze(0)
-        scores = F.cosine_similarity(query, embs)
+        scores = F.cosine_similarity(query_embedding, embs)
         avg_score = scores.mean().item()
         return texts.tolist(), scores.tolist(), avg_score
     
@@ -166,3 +175,21 @@ class ModelLoader:
             board_embeddings[word.database_id] = modified_expected_embs[i]
         
         np.save(self.board_emb_path, board_embeddings)
+
+    def get_modified_board_data(self):
+        board_embeddings = torch.tensor(np.load(self.board_emb_path))
+        unmodified_board_embeddings = torch.tensor(np.load(self.unmodified_board_emb_path))
+
+        sim_scores = F.cosine_similarity(board_embeddings, unmodified_board_embeddings)
+
+        with WordDatabase(self.db_path) as db:
+            words = db.get_all_board_words()
+        
+        data = {
+            'words': [word[0] for word in words],
+            'ids': [word[1] for word in words],
+            'sim_scores': sim_scores.cpu().numpy().tolist()
+        }
+
+        return data
+        

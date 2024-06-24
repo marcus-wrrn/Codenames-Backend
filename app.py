@@ -130,5 +130,13 @@ def get_sim_texts():
     }
     return jsonify(data)
 
+@app.route('/api/board-words', methods=['GET'])
+def get_board_words():
+    try:
+        data = loader.get_modified_board_data()
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     app.run(debug=True)

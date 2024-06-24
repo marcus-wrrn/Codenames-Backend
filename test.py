@@ -9,7 +9,6 @@ board = init_gameboard(DB_PATH)
 
 #loader.play_turn_algorithmic(board, WordColor.RED)
 
-texts, scores, avg_score = loader.search_vocabulary("hello")
-
+texts, scores, avg_score = loader.search_vocabulary(board_id=313, num_words=80)
+texts_enc, scores_enc, avg_score_enc = loader.search_vocabulary(query='shakespeare', num_words=80)
 print()
-
