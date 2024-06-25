@@ -112,14 +112,23 @@ def save_log():
 @app.route('/api/get_sim_texts', methods=['POST'])
 def get_sim_texts():
     data = request.json
-    if 'word' not in data:
+    if 'search_type' not in data:
         return jsonify({'error': 'Missing required fields'}), 400
-    word = data['word']
+    search_type = data['search_type']
+
     num_results = 20
     if 'num_results' in data:
         num_results = data['num_results'] if type(data['num_results']) == int else num_results
+        
     try:
-        texts, scores, avg_score = loader.search_vocabulary(word, num_results)
+        if search_type == 'word':
+            word = data['word']
+            texts, scores, avg_score = loader.search_vocabulary(query=word, num_words=num_results)
+        elif search_type == 'id':
+            word_id = data['word_id']
+            texts, scores, avg_score = loader.search_vocabulary(word_id=word_id, num_words=num_results)
+        else:
+            return jsonify({'error': 'Invalid search type'}), 400
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     
@@ -137,6 +146,8 @@ def get_board_words():
         return jsonify(data)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
