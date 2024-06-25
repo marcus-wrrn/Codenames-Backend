@@ -81,13 +81,20 @@ class WordDatabase:
         ''', (word_id, word))
         if commit: self.conn.commit()
     
-    def get_board(self):
-        self.cursor.execute('''
-            SELECT word, word_id FROM board
+    def _get_board(self, board_name: str):
+        query = f'''
+            SELECT word, word_id FROM {board_name}
             ORDER BY RANDOM()
             LIMIT 25;
-        ''')
+        '''
+        self.cursor.execute(query)
         return self.cursor.fetchall()
+
+    def get_board(self):
+        return self._get_board('board')
+
+    def get_animal_board(self):
+        return self._get_board('animal_board')
     
     def get_random_bad_words(self, num=15):
         self.cursor.execute('''
