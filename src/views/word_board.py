@@ -10,6 +10,10 @@ class WordColor(Enum):
     GREY = 3
     BLACK = 4
 
+class CustomBoards(Enum):
+    ANIMALS = "animals"
+    COUNTRIES = "countries"
+
 @dataclass
 class BoardWord:
     board_id: int
@@ -95,6 +99,15 @@ def init_gameboard(db_path: str):
     with WordDatabase(db_path) as db:
         word_objs = db.get_board()
     return Board(word_objs)
+
+def create_custom_gameboard(db_path: str, custom_board: str):
+    if custom_board not in CustomBoards.__members__:
+        raise ValueError('Invalid custom board')
+    if custom_board == CustomBoards.COUNTRIES:
+        ...
+    elif custom_board == CustomBoards.ANIMALS:
+        ...
+    return init_gameboard(db_path)
 
 def create_board_from_response(db_path: str, word_objs: list[tuple]) -> Board:
     if not word_objs:

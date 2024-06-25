@@ -18,8 +18,18 @@ app = Flask(__name__)
 
 CORS(app) 
 
-@app.route('/api/startgame')
+@app.route('/api/startgame', methods=['GET', 'POST'])
 def start_game():
+    data = request.json
+    if 'custom_board' in data:
+        custom_board = data['custom_board']
+        if custom_board:
+            return jsonify({'error': 'Missing required fields'}), 400
+        try:
+            board = create_board_from_response(env.DB_PATH, custom_board['words'])
+        except Exception as e:
+            return jsonify({'error': str(e)}), 400
+
     first_team = get_random_team()
 
     board = init_gameboard(env.DB_PATH)
@@ -101,7 +111,7 @@ def save_log():
         return jsonify({'error processing data': str(e)}), 500
     
     try:
-        with GameLogDatabase(collection_name="logs_with_ids") as db:
+        with GameLogDatabase(collection_name="modified_embs") as db:
             db.save_log(log, game_words, word_colorIDs, origin_ip)
 
     except Exception as e:
@@ -119,14 +129,14 @@ def get_sim_texts():
     num_results = 20
     if 'num_results' in data:
         num_results = data['num_results'] if type(data['num_results']) == int else num_results
-        
+
     try:
         if search_type == 'word':
             word = data['word']
             texts, scores, avg_score = loader.search_vocabulary(query=word, num_words=num_results)
         elif search_type == 'id':
             word_id = data['word_id']
-            texts, scores, avg_score = loader.search_vocabulary(word_id=word_id, num_words=num_results)
+            texts, scores, avg_score = loader.search_vocabulary(board_id=word_id, num_words=num_results)
         else:
             return jsonify({'error': 'Invalid search type'}), 400
     except Exception as e:

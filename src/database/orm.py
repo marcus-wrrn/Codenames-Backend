@@ -25,6 +25,14 @@ class WordDatabase:
         ''')
 
         self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS animal_board (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                word TEXT,
+                word_id INTEGER UNIQUE
+            );
+        ''')
+
+        self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS bad_words (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 word TEXT,
@@ -55,6 +63,13 @@ class WordDatabase:
     def insert_board(self, word_id: int, word: str, commit=True) -> None:
         self.cursor.execute('''
             INSERT INTO board (word_id, word)
+            VALUES (?, ?)
+        ''', (word_id, word))
+        if commit: self.conn.commit()
+    
+    def insert_animal_board(self, word_id: int, word: str, commit=True) -> None:
+        self.cursor.execute('''
+            INSERT INTO animal_board (word_id, word)
             VALUES (?, ?)
         ''', (word_id, word))
         if commit: self.conn.commit()
