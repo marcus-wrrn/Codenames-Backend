@@ -5,6 +5,10 @@ import src.utils.utilities as utils
 
 
 class ScoringModel(nn.Module):
+    """
+    Unused model, was originally meant to replace the reranker however this led to overfitting, 
+    was deemed unnescessary. The reranker already accomplishes model scoring and the scoring model was only trained to approximate the rerankers original function
+    """
     def __init__(self):
         super(ScoringModel, self).__init__()
 

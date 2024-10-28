@@ -133,10 +133,15 @@ class ModelLoader:
 
     def adjust_embedding_values(self, turn: GameTurn, custom_board: CustomBoards=None):
         """
-        This function is used to modify the embedding values to better fit how the player makes decisions.
+        used to modify the embedding values over time to better fit how the player makes decisions.
         The idea is inspired by neural style transfer and is being worked on as a potential method for cost-effectively improving model performance in real time.
-        Effectively instead of retraining the model, the embedding values that it uses to search the state space change instead.
-        This is still being worked on and the results are currently undecided. 
+        Instead of retraining the model, the embedding values that it uses to search the state space change instead.
+        This is still being worked on and the results are currently inconclusive. 
+        
+        After playing over 100 games with this feature enabled no significant performance loss has been observed, subjectively however the way the model plays the game does appear to be different.
+        Certain embedding values are more likely to change than others, for example the word 'princess' has been observed to become more related to 'witchcraft' than it was previously. 
+        Additionally the word 'cell' became far more related to prison cells than biological cells after playing, these are some of the more obvious effects. The cossine similarity has only been observed to change by at most 0.2,
+        with the average being around 0.05. These results were found by directly comparing the modified embeddings with their original values and search for the most similar results in the VectorDB
         """
         # Get expected turn data
         sim_scores = turn.sim_scores
@@ -151,8 +156,7 @@ class ModelLoader:
 
         # remove words from expected choices that have already been chosen
         expected_words, expected_scores = utils.prune_words(expected_words, expected_scores, chosen_words)
-        if len(expected_words) == 0:
-            return
+        if len(expected_words) == 0: return
 
         # Calculate modified scores
         chosen_modified = utils.adain(chosen_scores, expected_scores)
@@ -181,6 +185,7 @@ class ModelLoader:
         np.save(board_emb_path, board_embeddings)
 
     def get_modified_board_data(self):
+        """Retrieves all board words and their modified counterparts, this method is primarily used for testing of the embedding style transfer system"""
         board_embeddings = torch.tensor(np.load(self.board_emb_path))
         unmodified_board_embeddings = torch.tensor(np.load(self.unmodified_board_emb_path))
 
