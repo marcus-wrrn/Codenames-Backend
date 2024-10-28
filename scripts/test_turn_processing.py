@@ -10,4 +10,4 @@ if __name__ == '__main__':
     with WordDatabase(DB_PATH) as db:
         turn = GameTurn(test_turn_player_choice['past_turn'], db)
     loader = ModelLoader()
-    loader.process_turn(turn)
+    loader.adjust_embedding_values(turn)

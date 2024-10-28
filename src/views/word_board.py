@@ -103,10 +103,13 @@ def init_gameboard(db_path: str):
 def create_custom_gameboard(db_path: str, custom_board: str):
     if custom_board not in CustomBoards.__members__:
         raise ValueError('Invalid custom board')
-    if custom_board == CustomBoards.COUNTRIES:
-        ...
-    elif custom_board == CustomBoards.ANIMALS:
-        ...
+    
+    with WordDatabase(db_path) as db:
+        if custom_board == CustomBoards.COUNTRIES:
+            return init_gameboard(db_path)
+        elif custom_board == CustomBoards.ANIMALS:
+            return db.get_animal_board()
+    
     return init_gameboard(db_path)
 
 def create_board_from_response(db_path: str, word_objs: list[tuple]) -> Board:

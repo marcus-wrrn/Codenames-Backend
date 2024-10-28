@@ -3,8 +3,9 @@ from torch import Tensor
 import torch.nn.functional as F
 import random
 import logging
-from src.views.word_board import WordColor
+from src.views.word_board import WordColor, CustomBoards
 from src.views.gameturn import TurnWord
+import env
 import numpy as np
 
 def get_device(is_cuda: str):
@@ -160,3 +161,17 @@ def prune_words(expected_words, expected_scores, chosen_words):
             pruned_scores.append(score)
 
     return np.array(pruned_words), np.array(pruned_scores)
+
+def map_string_to_custom_board(custom_board: str) -> CustomBoards:
+    try:
+        return CustomBoards(custom_board)
+    except ValueError:
+        raise ValueError('Invalid custom board')
+
+def map_custom_board_path(board_path: CustomBoards | None) -> str:
+    if board_path == CustomBoards.ANIMALS:
+        return env.ANIMAL_EMB_PATH
+    if board_path == CustomBoards.COUNTRIES:
+        return env.BOARD_EMB_PATH
+
+    return env.BOARD_EMB_PATH

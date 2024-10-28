@@ -3,6 +3,7 @@ from src.views.gameturn import GameLog
 import uuid
 
 class GameLogDatabase:
+    """Used to record all past games between the model and players"""
     def __init__(self, db_path='localhost', port=27017, db_name='game_log_db', collection_name='logs'):
         self.client = MongoClient(db_path, port)
         self.db = self.client[db_name]
@@ -14,7 +15,7 @@ class GameLogDatabase:
             'log': log.to_dict(),
             'game_words': game_words,
             'word_colorIDs': word_colorIDs,
-            'origin_ip': origin_ip
+            'origin_ip': origin_ip # origin ip is used as a simple way of determining same/different players, for safety reasons this should be hashed
         }
         self.logs.insert_one(data)
         return True
